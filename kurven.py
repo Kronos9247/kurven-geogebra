@@ -9,8 +9,6 @@ charset = [ char for char in charset ]
 charset = filter(lambda char: char != "E", charset)
 charset = list(charset)
 
-points = 2 # min 1
-
 def isint(name):
     try:
         int(name)
@@ -38,18 +36,37 @@ def interpolate_tree(points, depth=0):
     commands = []
     _points = dict()
     for i in range(len(points) - 1):
-        _points[i] = interpolate(points[i], points[i + 1], to_point(i + depth))
+        point_name = to_point(i + depth)
+        if len(points) == 2:
+            point_name = "E"
+        
+        _points[i] = interpolate(points[i], points[i + 1], point_name)
         commands.append(_points[i])
 
     if len(points) > 2:
         new_points = list(_points.keys())
+        new_points = map(lambda point: point + depth, new_points)
+        new_points = list(new_points)
+
         commands.append(interpolate_tree(new_points, depth=depth + len(new_points)))
     return "\n".join(commands)
 
-if __name__ == "__main__":
-    if points >= len(charset):
-        raise ValueError
+
+def build_points(count, offset=2):
+    points = charset[:count + 1]
+    points = [[point, "({}, 0)".format(i * offset)] for i, point in enumerate(points)] 
     
-    print(interpolate_tree([ "A", "B", "C" ]))
+    return points
+    
+def build_expressions(effectors=1):
+    if effectors >= len(charset) and effectors < 0:
+        raise ValueError
+
+    exprs = interpolate_tree(charset[:effectors + 1])
+    exprs = exprs.split("\n")
+    exprs = map(lambda expr: expr.split("="), exprs)
+    exprs = list(exprs)
+
+    return exprs
 
     
